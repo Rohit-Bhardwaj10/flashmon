@@ -3,7 +3,7 @@ import path from "path";
 import fs from "fs";
 
 jest.setTimeout(20000);
-const entry = path.resolve(__dirname, "fixtures/simple-entry.js");
+const entry = path.resolve(__dirname, "fixtures/simple-entry.ts");
 it("watches dependencies and restarts on change", (done) => {
   const cli = spawn("node", [
     path.resolve(__dirname, "../bin/flashmon.js"),

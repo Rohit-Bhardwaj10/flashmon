@@ -1,6 +1,5 @@
 // import path from "path";
 // import fs from "fs";
-//
 // export function resolvePath(importPath: string, parentFile: string): string {
 //   console.log("resolvePath:", importPath, parentFile);
 //   // Only handle relative or absolute imports
@@ -43,10 +42,9 @@ import path from "path";
 import fs from "fs";
 
 export function resolvePath(importPath: string, parentFile: string): string {
-  console.log("resolvePath:", importPath, parentFile);
   // Only handle relative or absolute imports
   if (importPath.startsWith(".") || importPath.startsWith("/")) {
-    // This is the correct parent directory!
+    // Use parentFile to get the correct parent directory
     const parentDir = path.dirname(parentFile);
     let resolved = path.resolve(parentDir, importPath);
 
