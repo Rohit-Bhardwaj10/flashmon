@@ -15,6 +15,7 @@ export async function buildDependencyGraph(
     const ast = await getCachedAst(entryPath);
 
     for (const node of ast.body) {
+      // Handle ES6 import statements
       if (
         node.type === "ImportDeclaration" &&
         node.source?.type === "StringLiteral"
@@ -22,21 +23,68 @@ export async function buildDependencyGraph(
         const importPath = node.source.value;
         try {
           const resolvedPath = resolvePath(importPath, entryPath);
-          dependencies.add(String(resolvedPath));
+          
+          // Only process if we got a valid resolved path
+          if (resolvedPath && resolvedPath.trim() !== "") {
+            dependencies.add(String(resolvedPath));
 
-          // Recursively build subgraph
-          const subDeps = await buildDependencyGraph(
-            String(resolvedPath),
-            cache
-          );
-          subDeps.forEach((dep) => dependencies.add(dep));
+            // Recursively build subgraph
+            const subDeps = await buildDependencyGraph(
+              String(resolvedPath),
+              cache
+            );
+            subDeps.forEach((dep) => dependencies.add(dep));
+          }
+          // Silently skip npm packages that can't be resolved
         } catch (error) {
-          logger.warn(
-            `Skipping unresolved import: ${importPath} in ${entryPath}`
-          );
+          // Only warn for relative imports that fail
+          if (importPath.startsWith(".") || importPath.startsWith("/")) {
+            logger.warn(
+              `Skipping unresolved import: ${importPath} in ${entryPath}`
+            );
+          }
         }
       }
-      // (Optional) Add require() support here
+      
+      // Handle CommonJS require statements (const x = require('...'))
+      if (
+        node.type === "VariableDeclaration" &&
+        node.declarations
+      ) {
+        for (const declarator of node.declarations) {
+          if (
+            declarator.init?.type === "CallExpression" &&
+            declarator.init.callee?.type === "Identifier" &&
+            declarator.init.callee.value === "require" &&
+            declarator.init.arguments?.[0]?.expression?.type === "StringLiteral"
+          ) {
+            const requirePath = declarator.init.arguments[0].expression.value;
+            try {
+              const resolvedPath = resolvePath(requirePath, entryPath);
+              
+              // Only process if we got a valid resolved path
+              if (resolvedPath && resolvedPath.trim() !== "") {
+                dependencies.add(String(resolvedPath));
+
+                // Recursively build subgraph
+                const subDeps = await buildDependencyGraph(
+                  String(resolvedPath),
+                  cache
+                );
+                subDeps.forEach((dep) => dependencies.add(dep));
+              }
+              // Silently skip npm packages that can't be resolved
+            } catch (error) {
+              // Only warn for relative imports that fail
+              if (requirePath.startsWith(".") || requirePath.startsWith("/")) {
+                logger.warn(
+                  `Skipping unresolved require: ${requirePath} in ${entryPath}`
+                );
+              }
+            }
+          }
+        }
+      }
     }
   } catch (error) {
     logger.error(`Error parsing ${entryPath}:`, error);
