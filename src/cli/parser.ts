@@ -20,6 +20,9 @@ export function parseArgs(): FlashmonOptions {
 
   program.parse(process.argv);
 
+const option = [];
+option.push()
+
   const options = program.opts();
   const [script] = program.args;
 

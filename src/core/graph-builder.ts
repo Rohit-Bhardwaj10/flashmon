@@ -4,7 +4,7 @@ import { logger } from "../utils/logger";
 
 export async function buildDependencyGraph(
   entryPath: string,
-  cache = new Map<string, Set<string>>()
+  cache = new Map<string, Set<string>>(),
 ): Promise<Set<string>> {
   if (cache.has(entryPath)) return cache.get(entryPath)!;
 
@@ -23,7 +23,7 @@ export async function buildDependencyGraph(
         const importPath = node.source.value;
         try {
           const resolvedPath = resolvePath(importPath, entryPath);
-          
+
           // Only process if we got a valid resolved path
           if (resolvedPath && resolvedPath.trim() !== "") {
             dependencies.add(String(resolvedPath));
@@ -31,7 +31,7 @@ export async function buildDependencyGraph(
             // Recursively build subgraph
             const subDeps = await buildDependencyGraph(
               String(resolvedPath),
-              cache
+              cache,
             );
             subDeps.forEach((dep) => dependencies.add(dep));
           }
@@ -40,17 +40,14 @@ export async function buildDependencyGraph(
           // Only warn for relative imports that fail
           if (importPath.startsWith(".") || importPath.startsWith("/")) {
             logger.warn(
-              `Skipping unresolved import: ${importPath} in ${entryPath}`
+              `Skipping unresolved import: ${importPath} in ${entryPath}`,
             );
           }
         }
       }
-      
+
       // Handle CommonJS require statements (const x = require('...'))
-      if (
-        node.type === "VariableDeclaration" &&
-        node.declarations
-      ) {
+      if (node.type === "VariableDeclaration" && node.declarations) {
         for (const declarator of node.declarations) {
           if (
             declarator.init?.type === "CallExpression" &&
@@ -61,7 +58,7 @@ export async function buildDependencyGraph(
             const requirePath = declarator.init.arguments[0].expression.value;
             try {
               const resolvedPath = resolvePath(requirePath, entryPath);
-              
+
               // Only process if we got a valid resolved path
               if (resolvedPath && resolvedPath.trim() !== "") {
                 dependencies.add(String(resolvedPath));
@@ -69,7 +66,7 @@ export async function buildDependencyGraph(
                 // Recursively build subgraph
                 const subDeps = await buildDependencyGraph(
                   String(resolvedPath),
-                  cache
+                  cache,
                 );
                 subDeps.forEach((dep) => dependencies.add(dep));
               }
@@ -78,7 +75,7 @@ export async function buildDependencyGraph(
               // Only warn for relative imports that fail
               if (requirePath.startsWith(".") || requirePath.startsWith("/")) {
                 logger.warn(
-                  `Skipping unresolved require: ${requirePath} in ${entryPath}`
+                  `Skipping unresolved require: ${requirePath} in ${entryPath}`,
                 );
               }
             }
@@ -101,7 +98,8 @@ export function mergeGraphs(...graphs: Set<string>[]): Set<string> {
 // Check if file is a new dependency
 export function isNewDependency(
   file: string,
-  currentGraph: Set<string>
+  currentGraph: Set<string>,
 ): boolean {
   return !currentGraph.has(file);
 }
+

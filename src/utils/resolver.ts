@@ -70,27 +70,30 @@ export function resolvePath(importPath: string, parentFile: string): string {
     }
 
     throw new Error(
-      `Cannot resolve import path: ${importPath} from ${parentFile}`
+      `Cannot resolve import path: ${importPath} from ${parentFile}`,
     );
   } else {
     // Handle npm package imports
     const parentDir = path.dirname(parentFile);
-    
+
     // Look for node_modules starting from the parent directory and walking up
     let currentDir = parentDir;
     while (currentDir !== path.dirname(currentDir)) {
       const nodeModulesPath = path.join(currentDir, "node_modules", importPath);
-      
+
       // Check if the package exists in node_modules
       if (fs.existsSync(nodeModulesPath)) {
         // Try to find the main entry point
         const packageJsonPath = path.join(nodeModulesPath, "package.json");
         if (fs.existsSync(packageJsonPath)) {
           try {
-            const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
-            const mainField = packageJson.main || packageJson.module || "index.js";
+            const packageJson = JSON.parse(
+              fs.readFileSync(packageJsonPath, "utf8"),
+            );
+            const mainField =
+              packageJson.main || packageJson.module || "index.js";
             const mainPath = path.join(nodeModulesPath, mainField);
-            
+
             if (fs.existsSync(mainPath)) {
               return mainPath;
             }
@@ -98,7 +101,7 @@ export function resolvePath(importPath: string, parentFile: string): string {
             // Fall back to index.js if package.json is malformed
           }
         }
-        
+
         // Try common entry points
         const commonEntries = ["index.js", "index.ts", "index.json"];
         for (const entry of commonEntries) {
@@ -108,11 +111,11 @@ export function resolvePath(importPath: string, parentFile: string): string {
           }
         }
       }
-      
+
       // Move up one directory
       currentDir = path.dirname(currentDir);
     }
-    
+
     // If we can't resolve the npm package, return null instead of throwing
     // This allows the graph builder to handle it gracefully
     return "";
