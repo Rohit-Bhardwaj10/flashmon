@@ -17,17 +17,12 @@ Install it globally:
 npm install -g flashmon
 ```
 
-Or use it directly with npx:
-```bash
-npx flashmon index.js
-```
-
 ## Usage
 
 Simply point flashmon to your entry file:
 
 ```bash
-flashmon server.js
+npx flashmon server.js
 ```
 
 ### TypeScript Support
@@ -35,7 +30,7 @@ flashmon server.js
 flashmon works seamlessly with TypeScript projects:
 
 ```bash
-flashmon src/index.ts
+npx flashmon src/index.ts
 ```
 
 ## How it works
