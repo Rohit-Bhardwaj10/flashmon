@@ -19,6 +19,12 @@ export class SmartWatcher {
       .on("change", (file) => {
         logger.info(`File changed: ${file}`);
         this.onChange(file);
+      })
+      .on("error", (error) => {
+        logger.error(`Watcher error: ${error}`);
+      })
+      .on("ready", () => {
+        logger.info("Watcher is ready");
       });
   }
 
@@ -26,8 +32,14 @@ export class SmartWatcher {
     const added = [...files].filter((f) => !this.trackedFiles.has(f));
     const removed = [...this.trackedFiles].filter((f) => !files.has(f));
 
-    if (added.length) this.watcher.add(added);
-    if (removed.length) this.watcher.unwatch(removed);
+    if (added.length) {
+      logger.info(`Adding ${added.length} files to watcher: ${added.join(", ")}`);
+      this.watcher.add(added);
+    }
+    if (removed.length) {
+      logger.info(`Removing ${removed.length} files from watcher`);
+      this.watcher.unwatch(removed);
+    }
 
     this.trackedFiles = new Set(files);
     logger.success(`Watching ${files.size} files`);

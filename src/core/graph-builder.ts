@@ -26,14 +26,17 @@ export async function buildDependencyGraph(
 
           // Only process if we got a valid resolved path
           if (resolvedPath && resolvedPath.trim() !== "") {
-            dependencies.add(String(resolvedPath));
+            // Skip node_modules dependencies
+            if (!resolvedPath.includes("node_modules")) {
+              dependencies.add(String(resolvedPath));
 
-            // Recursively build subgraph
-            const subDeps = await buildDependencyGraph(
-              String(resolvedPath),
-              cache,
-            );
-            subDeps.forEach((dep) => dependencies.add(dep));
+              // Recursively build subgraph
+              const subDeps = await buildDependencyGraph(
+                String(resolvedPath),
+                cache,
+              );
+              subDeps.forEach((dep) => dependencies.add(dep));
+            }
           }
           // Silently skip npm packages that can't be resolved
         } catch (error) {
@@ -61,14 +64,17 @@ export async function buildDependencyGraph(
 
               // Only process if we got a valid resolved path
               if (resolvedPath && resolvedPath.trim() !== "") {
-                dependencies.add(String(resolvedPath));
+                // Skip node_modules dependencies
+                if (!resolvedPath.includes("node_modules")) {
+                  dependencies.add(String(resolvedPath));
 
-                // Recursively build subgraph
-                const subDeps = await buildDependencyGraph(
-                  String(resolvedPath),
-                  cache,
-                );
-                subDeps.forEach((dep) => dependencies.add(dep));
+                  // Recursively build subgraph
+                  const subDeps = await buildDependencyGraph(
+                    String(resolvedPath),
+                    cache,
+                  );
+                  subDeps.forEach((dep) => dependencies.add(dep));
+                }
               }
               // Silently skip npm packages that can't be resolved
             } catch (error) {
@@ -86,6 +92,9 @@ export async function buildDependencyGraph(
   } catch (error) {
     logger.error(`Error parsing ${entryPath}:`, error);
   }
+
+  // Always include the entry file itself in the dependency graph
+  dependencies.add(entryPath);
 
   return dependencies;
 }

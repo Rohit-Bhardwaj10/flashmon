@@ -60,6 +60,10 @@ async function main() {
     logger.success(
       `Watching ${dependencyGraph.size} files. Press Ctrl+C to exit.`
     );
+
+    // Keep the process alive
+    // The watcher and child process should keep it alive, but we add this as a safety measure
+    setInterval(() => {}, 1 << 30); // Run every ~12 days (essentially forever)
   } catch (error) {
     logger.error("Initialization failed:", error);
     process.exit(1);
